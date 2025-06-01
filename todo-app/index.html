@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 30px auto;
+      padding: 0 15px;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    li.completed span {
+      text-decoration: line-through;
+      color: #777;
+    }
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: red;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .task-title {
+      flex: 1;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 Мои задачи</h1>
+
+  <form id="task-form">
+    <input type="text" id="task-input" placeholder="Новая задача" required />
+    <button type="submit">Добавить</button>
+  </form>
+
+  <ul id="task-list"></ul>
+
+  <script>
+    const API_URL = '/api/tasks';
+
+    const taskForm = document.getElementById('task-form');
+    const taskInput = document.getElementById('task-input');
+    const taskList = document.getElementById('task-list');
+
+    // Загрузка задач с сервера
+    async function loadTasks() {
+      const res = await fetch(API_URL);
+      const tasks = await res.json();
+      taskList.innerHTML = '';
+      tasks.forEach(task => {
+        addTaskToDOM(task);
+      });
+    }
+
+    // Добавить задачу в DOM
+    function addTaskToDOM(task) {
+      const li = document.createElement('li');
+      li.className = task.completed ? 'completed' : '';
+      li.dataset.id = task._id;
+
+      const span = document.createElement('span');
+      span.className = 'task-title';
+      span.textContent = task.title;
+      span.onclick = () => toggleTask(task._id, !task.completed);
+
+      const btnDelete = document.createElement('button');
+      btnDelete.textContent = '✕';
+      btnDelete.className = 'btn-delete';
+      btnDelete.onclick = () => deleteTask(task._id);
+
+      li.appendChild(span);
+      li.appendChild(btnDelete);
+      taskList.appendChild(li);
+    }
+
+    // Добавить новую задачу
+    taskForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = taskInput.value.trim();
+      if (!title) return;
+
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title})
+      });
+      const newTask = await res.json();
+      addTaskToDOM(newTask);
+      taskInput.value = '';
+    });
+
+    // Удалить задачу
+    async function deleteTask(id) {
+      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+      const li = taskList.querySelector(`li[data-id="${id}"]`);
+      if (li) li.remove();
+    }
+
+    // Переключить статус задачи
+    async function toggleTask(id, completed) {
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ completed })
+      });
+      const updatedTask = await res.json();
+      const li = taskList.querySelector(`li[data-id="${id}"]`);
+      if (li) {
+        li.className = updatedTask.completed ? 'completed' : '';
+      }
+    }
+
+    // Загрузить задачи при старте
+    loadTasks();
+  </script>
+</body>
+</html>

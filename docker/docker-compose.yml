@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:5
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - todo-net
+
+  todo-app:
+    build: ../todo-app
+    container_name: todo-app
+    expose:
+      - "5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/tododb
+    depends_on:
+      - mongo
+    networks:
+      - todo-net
+
+  nginx:
+    build:
+      context: ..  # подняли на уровень todo-iac (где есть todo-app и docker)
+      dockerfile: docker/nginx/Dockerfile
+    container_name: nginx-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - todo-app
+    networks:
+      - todo-net
+
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus_todo
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - todo-net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana_todo
+    ports:
+      - "3000:3000"
+    networks:
+      - todo-net
+
+volumes:
+  mongo-data:
+
+networks:
+  todo-net:
+    driver: bridge
