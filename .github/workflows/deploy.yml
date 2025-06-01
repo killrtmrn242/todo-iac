@@ -24,7 +24,7 @@ jobs:
       run: docker build -t $IMAGE_NAME_TODO ./todo-app
 
     - name: Build nginx image
-      run: docker build -t $IMAGE_NAME_NGINX ./docker/nginx
+      run: docker build -t $IMAGE_NAME_NGINX .
 
     - name: Push todo-app image
       run: docker push $IMAGE_NAME_TODO
