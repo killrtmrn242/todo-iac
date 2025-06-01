@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME_TODO: <твой-докерхаб-юзернейм>/todo-app
-      IMAGE_NAME_NGINX: <твой-докерхаб-юзернейм>/todo-nginx
+      IMAGE_NAME_TODO: daniil951/todo-iac:app
+      IMAGE_NAME_NGINX: daniil951/todo-iac:nginx
 
     steps:
     - name: Checkout code
